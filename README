@@ -1,0 +1,6 @@
+== Updatemylocation ==
+
+Author Antti Jaakkola (annttu(a) annttu.fi)
+
+Simple python script to update your googl latitude location 
+based on wifi and usb mobile modem.
