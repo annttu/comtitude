@@ -4,3 +4,12 @@ Author Antti Jaakkola (annttu(a) annttu.fi)
 
 Simple python script to update your googl latitude location 
 based on wifi and usb mobile modem.
+
+Dependencies:
+Oauth2: https://github.com/simplegeo/python-oauth2
+gflags: http://code.google.com/p/python-gflags/source/checkout
+google-api-python-client: http://code.google.com/p/google-api-python-client/
+urllib2
+json
+libxml2
+
