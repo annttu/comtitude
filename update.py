@@ -22,7 +22,7 @@ longitude = re.compile("lon=\"([0-9]+\.[0-9]+)\"")
 accurancy = re.compile("range=\"([0-9]+)\"")
 
 def usage():
-        print("Usage: [-h, --help show help|-f --wifi wifi only|-c --cell cellid only|-o --once run once only]")
+        print("Usage: [-h, --help show help|-f --wifi wifi only|-c --cell cellid only] [-o --once run once only] [-d --delay between updates]")
         return
 
 def opencellid(jdata):
@@ -135,9 +135,10 @@ def formatOutput(loc):
 def main(args):
     cell = True
     wifi = True
+    delay = 360
     if len(args) > 0:
         try:
-            opts, args = getopt.getopt(args, "hfco", ["help", "wifi", "cell", "once"])
+            opts, args = getopt.getopt(args, "hfcod:", ["help", "wifi", "cell", "once", "delay"])
             once = False
         except:
             usage()
@@ -152,6 +153,12 @@ def main(args):
                 wifi = False
             elif opt in ("-o", "--once"):
                 once = True
+            elif opt in ("-d", "--delay"):
+                if int(arg) > 5:
+                    delay  = int(arg)
+                else:
+                    print("delay too small!")
+                    return
         if cell is False and wifi is False:
             print("Need either cellurar or wifi access")
             sys.exit(1)
@@ -161,7 +168,7 @@ def main(args):
     try:
         while True:
             formatOutput(updateLocation(wifi, cell))
-            sleep(360)
+            sleep(delay)
     except KeyboardInterrupt:
         print("Bye!")
         pass

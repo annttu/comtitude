@@ -111,9 +111,13 @@ def get_wifi():
     json = []
     aps = subprocess.check_output("/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport /usr/sbin/airport -s", shell=True)
     for ap in aps.strip().split("\n")[1:]:
-        mac, streight = ap[33:55].strip().split(" ",2)
-        # {"mac_address" : "00:15:a5:8b:90:00", "signal_strength" : -78}
-        json.append({"mac_address" : mac, "signal_strength" : int(streight)})
+        try:
+            mac, streight = ap[33:55].strip().split(" ",2)
+            # {"mac_address" : "00:15:a5:8b:90:00", "signal_strength" : -78}
+            json.append({"mac_address" : mac, "signal_strength" : int(streight)})
+        except ValueError:
+            print("Unknown error parsing wlan values")
+            
     if len(json) > 0:
         return json
     else:
