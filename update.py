@@ -22,7 +22,7 @@ longitude = re.compile("lon=\"([0-9]+\.[0-9]+)\"")
 accurancy = re.compile("range=\"([0-9]+)\"")
 
 def usage():
-        print("Usage: [-h, --help show help|-f --wifi wifi only|-c --cell cellid only] [-o --once run once only] [-d --delay between updates]")
+        print("Usage: [-h, --help show help|-f --wifi wifi only|-c --cell cellid only] [-o --once run once only] [-d --delay between updates] [-t --try don't update to latitude")
         return
 
 def opencellid(jdata):
@@ -58,7 +58,7 @@ def opencellid(jdata):
 def glocation(jdata):
     retval = {}
     loc = json.loads(getPage("http://www.google.com/loc/json", jdata))
-    print("\"%s\"" % loc)
+    #print("\"%s\"" % loc)
     if "location" in loc:
         retval["latitude"] = float(loc["location"]["latitude"])
         retval["longitude"] = float(loc["location"]["longitude"])
@@ -67,8 +67,11 @@ def glocation(jdata):
         if "street_number" in loc["location"]["address"]:
             retval["street_number"] = loc["location"]["address"]["street_number"]
         else:
-            retval["street_number"] = 0
-        retval["city"] = loc["location"]["address"]["county"]
+            retval["street_number"] = ""
+        if "county" in loc["location"]["address"]:
+            retval["city"] = loc["location"]["address"]["county"]
+        else:
+            retval["city"] = ""
         retval["country"] = loc["location"]["address"]["country"]
         retval["provider"] = "google"
         if retval["accurancy"] > 10000:
@@ -106,17 +109,20 @@ def updateLocation(wlan=True, cell=True):
         return
     #print("%s" % json.dumps(jdata))
     #print("%s" % getPage("http://127.0.0.1:8080", jdata))
-    loc = json.loads(getPage("http://www.google.com/loc/json", jdata))
-    #print("%s" % loc)
-    loc = glocation(jdata)
+    loc = getPage("http://www.google.com/loc/json", jdata)
     if loc is not None:
-        google.location2latitude(loc["latitude"], loc["longitude"], loc["accurancy"])
-        loc["count_wifi_towers"] = count_wifi_towers;
-        loc["count_cell_towers"] = count_cell_towers;
-        return loc
+        loc = json.loads(loc)
+        #print("%s" % loc)
+        loc = glocation(jdata)
+        if loc is not None:
+            google.location2latitude(loc["latitude"], loc["longitude"], loc["accurancy"])
+            loc["count_wifi_towers"] = count_wifi_towers;
+            loc["count_cell_towers"] = count_cell_towers;
+            return loc
     loc = opencellid(jdata)
     if loc is not None:
-        google.location2latitude(loc["latitude"], loc["longitude"], loc["accurancy"])
+        if update:
+            google.location2latitude(loc["latitude"], loc["longitude"], loc["accurancy"])
         loc["count_wifi_towers"] = count_wifi_towers;
         loc["count_cell_towers"] = count_cell_towers;
         return loc
@@ -136,9 +142,10 @@ def main(args):
     cell = True
     wifi = True
     delay = 360
+    update = True
     if len(args) > 0:
         try:
-            opts, args = getopt.getopt(args, "hfcod:", ["help", "wifi", "cell", "once", "delay"])
+            opts, args = getopt.getopt(args, "hfcod:t", ["help", "wifi", "cell", "once", "delay", "try"])
             once = False
         except:
             usage()
@@ -153,6 +160,8 @@ def main(args):
                 wifi = False
             elif opt in ("-o", "--once"):
                 once = True
+            elif opt in ("-t", "--try"):
+                update = False
             elif opt in ("-d", "--delay"):
                 if int(arg) > 5:
                     delay  = int(arg)

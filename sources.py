@@ -51,61 +51,65 @@ def get_operationmode():
         return
 def get_cellid():
     retval = {}
-    ser = open_serial()
-    if ser is None:
-        return
-    ser.write("AT+CGREG=2\r")
-    cellid = 0
-    lac = 0
-    lines = 0
-    empty_buffer(ser)
-    ser.write("AT+CGREG?\r")
-    while lines < 20:
-        line = ser.readline()
-        match = re.match("\+CGREG: 2,1, ([0-9ABCDEF]+), ([0-9ABCDEF]+)", line)
-        lines += 1
-        if match is not None:
-            #print("%s %s" % (match.group(1), match.group(2)))
-            retval["location_area_code"] =  int(match.group(1), 16)
-            retval["cell_id"] = int(match.group(2), 16)
-            break
-        if error.match(line) is not None:
-            print("Modem don't supporting AT+CGREG")
-            break
+    try:
+        ser = open_serial()
+        if ser is None:
+            return
+        ser.write("AT+CGREG=2\r")
+        cellid = 0
+        lac = 0
+        lines = 0
+        empty_buffer(ser)
+        ser.write("AT+CGREG?\r")
+        while lines < 20:
+            line = ser.readline()
+            match = re.match("\+CGREG: 2,1, ([0-9ABCDEF]+), ([0-9ABCDEF]+)", line)
+            lines += 1
+            if match is not None:
+                #print("%s %s" % (match.group(1), match.group(2)))
+                retval["location_area_code"] =  int(match.group(1), 16)
+                retval["cell_id"] = int(match.group(2), 16)
+                break
+            if error.match(line) is not None:
+                print("Modem don't supporting AT+CGREG")
+                break
 
-    if retval == {}:
+        if retval == {}:
+            ser.close()
+            return
+
+        lines = 0
+        ser.write("AT+COPS?\r")
+        while lines < 10:
+            line = ser.readline()
+            match = re.match("\+COPS: 1,2,\"([0-9]+)\",2", line)
+            lines += 1
+            if match is not None:
+                retval["mobile_network_code"] = match.group(1)[3:]
+                retval["mobile_country_code"] = match.group(1)[0:3]
+                break
+            if error.match(line) is not None:
+                print("Modem don't support AT+COPS?")
+                break
+
+        ser.write("AT+CSQ\r")
+        lines = 0
+        while lines < 10:
+            line = ser.readline()
+            # +CSQ: 10,99
+            match = re.match("\+CSQ: ([0-9]+),([0-9]+)", line)
+            lines += 1
+            if match is not None:
+                retval["signal_strength"] =  (int(match.group(1)) * 2) - 113
+                break
+            if error.match(line) is not None:
+                break
+        retval["age"] = 0
         ser.close()
+        return [retval]
+    except OSError:
+        print("Error while getting cell-id")
         return
-
-    lines = 0
-    ser.write("AT+COPS?\r")
-    while lines < 10:
-        line = ser.readline()
-        match = re.match("\+COPS: 1,2,\"([0-9]+)\",2", line)
-        lines += 1
-        if match is not None:
-            retval["mobile_network_code"] = match.group(1)[3:]
-            retval["mobile_country_code"] = match.group(1)[0:3]
-            break
-        if error.match(line) is not None:
-            print("Modem don't support AT+COPS?")
-            break
-
-    ser.write("AT+CSQ\r")
-    lines = 0
-    while lines < 10:
-        line = ser.readline()
-        # +CSQ: 10,99
-        match = re.match("\+CSQ: ([0-9]+),([0-9]+)", line)
-        lines += 1
-        if match is not None:
-            retval["signal_strength"] =  (int(match.group(1)) * 2) - 113
-            break
-        if error.match(line) is not None:
-            break
-
-    ser.close()
-    return [retval]
 
 def get_wifi():
     json = []
@@ -114,7 +118,7 @@ def get_wifi():
         try:
             mac, streight = ap[33:55].strip().split(" ",2)
             # {"mac_address" : "00:15:a5:8b:90:00", "signal_strength" : -78}
-            json.append({"mac_address" : mac, "signal_strength" : int(streight)})
+            json.append({"mac_address" : mac, "signal_strength" : int(streight), "age" : 0})
         except ValueError:
             print("Unknown error parsing wlan values")
             
