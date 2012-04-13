@@ -3,6 +3,7 @@
 import re
 import sys
 import subprocess
+import logging
 
 sys.path.append("/opt/local/Library/Frameworks/Python.framework/Versions/2.6/lib/python2.6/site-packages/")
 import serial
@@ -10,11 +11,13 @@ import serial
 error = re.compile("COMMAND NOT SUPPORT")
 
 def open_serial():
+    console = logging.getLogger("console")
     try:
         ser = serial.Serial("/dev/cu.HUAWEIMobile-Pcui", 115200, timeout=2)
         empty_buffer(ser)
         return ser
     except serial.serialutil.SerialException:
+        console.error("Modem busy or not available!")
         return
 
 def empty_buffer(ser):
@@ -23,6 +26,7 @@ def empty_buffer(ser):
     return
 
 def get_operationmode():
+    console = logging.getLogger("console")
     try:
         ser = open_serial()
         if ser is None:
@@ -42,14 +46,15 @@ def get_operationmode():
                     ser.close()
                     return "WCDMA"
             if error.match(line) is not None:
-                print("Modem don't support AT^SYSINFO")
+                console.debug("Modem don't support AT^SYSINFO")
                 break
         ser.close()
         return
     except serial.serialutil.SerialException:
-        print("Error using modem")
+        console.error("Error while using modem")
         return
 def get_cellid():
+    console = logging.getLogger("console")
     retval = {}
     try:
         ser = open_serial()
@@ -71,7 +76,7 @@ def get_cellid():
                 retval["cell_id"] = int(match.group(2), 16)
                 break
             if error.match(line) is not None:
-                print("Modem don't supporting AT+CGREG")
+                console.error("Modem don't supporting AT+CGREG")
                 break
 
         if retval == {}:
@@ -89,7 +94,7 @@ def get_cellid():
                 retval["mobile_country_code"] = match.group(1)[0:3]
                 break
             if error.match(line) is not None:
-                print("Modem don't support AT+COPS?")
+                console.error("Modem don't support AT+COPS?")
                 break
 
         ser.write("AT+CSQ\r")
@@ -108,10 +113,15 @@ def get_cellid():
         ser.close()
         return [retval]
     except OSError:
-        print("Error while getting cell-id")
+        console.error("Error while getting cell-id")
+        #ser.close()
+        return
+    except serial.serialutil.SerialException:
+        console.error("Error while getting cell-id")
         return
 
 def get_wifi():
+    console = logging.getLogger("console")
     json = []
     aps = subprocess.check_output("/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport /usr/sbin/airport -s", shell=True)
     for ap in aps.strip().split("\n")[1:]:
@@ -120,8 +130,7 @@ def get_wifi():
             # {"mac_address" : "00:15:a5:8b:90:00", "signal_strength" : -78}
             json.append({"mac_address" : mac, "signal_strength" : int(streight), "age" : 0})
         except ValueError:
-            print("Unknown error parsing wlan values")
-            
+            console.error("Unknown error parsing wlan values")
     if len(json) > 0:
         return json
     else:

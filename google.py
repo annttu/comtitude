@@ -2,6 +2,7 @@
 
 # some helperfunctions for googleapi
 
+#
 #http://maps.googleapis.com/maps/api/geocode/json?latlng=60.56245,24.9475585&sensor=false
 
 import sys
@@ -60,7 +61,7 @@ def location2latitude(lat, lon, acc=130):
            # https://www.google.com/accounts/ManageDomains
            consumer_key='annttu.fi',
            consumer_secret='yAVn-cmYaqQOC59yTikkeDLw',
-           user_agent='Browser/1.0',
+           user_agent='Comtitude/1.0',
            domain='annttu.fi',
            scope='https://www.googleapis.com/auth/latitude',
            xoauth_displayname='Google API Latitude Example',

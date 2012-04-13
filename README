@@ -1,9 +1,13 @@
-== Updatemylocation ==
+== Comtitude ==
 
 Author Antti Jaakkola (annttu(a) annttu.fi)
 
-Simple python script to update your googl latitude location 
-based on wifi and usb mobile modem.
+Description:
+Simple python script to update your google latitude location 
+based on information about wlans and cell-ids around computer.
+
+Scripts user wlan mac-addresses and cell-ids from usb modem within google api 
+to locate 
 
 Dependencies:
 Oauth2: https://github.com/simplegeo/python-oauth2
@@ -12,4 +16,5 @@ google-api-python-client: http://code.google.com/p/google-api-python-client/
 urllib2
 json
 libxml2
+
 
