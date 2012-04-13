@@ -1,0 +1,5 @@
+# google customer secret and domain
+
+consumer_key='domain.tld',
+consumer_secret='putsecrethere',
+domain='domain.tld',
