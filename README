@@ -10,11 +10,16 @@ Scripts user wlan mac-addresses and cell-ids from usb modem within google api
 to locate 
 
 Dependencies:
-Oauth2: https://github.com/simplegeo/python-oauth2
-gflags: http://code.google.com/p/python-gflags/source/checkout
-google-api-python-client: http://code.google.com/p/google-api-python-client/
+google-api-python-client: http://code.google.com/p/google-api-python-client/downloads/list
+* easy_install google-api-python-client
+Pyserial
+* easy_install -U pyserial
 urllib2
 json
 libxml2
 
+Before use you need to register a domain for oauth.
 
+You can do it here: https://www.google.com/accounts/ManageDomains
+
+Put your domain and customer_secret to googledata.py file
