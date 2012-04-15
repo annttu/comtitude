@@ -7,6 +7,7 @@
 
 import sys
 from os import environ
+import googledata
 
 home = environ["HOME"]
 
@@ -59,12 +60,12 @@ def location2latitude(lat, lon, acc=130):
     auth_discovery = build("latitude", "v1").auth_discovery()
     flow = FlowThreeLegged(auth_discovery,
            # https://www.google.com/accounts/ManageDomains
-           consumer_key='annttu.fi',
-           consumer_secret='yAVn-cmYaqQOC59yTikkeDLw',
+           consumer_key=googledata.consumer_key,
+           consumer_secret=googledata.consumer_secret,
+           domain=googledata.domain,
            user_agent='Comtitude/1.0',
-           domain='annttu.fi',
            scope='https://www.googleapis.com/auth/latitude',
-           xoauth_displayname='Google API Latitude Example',
+           xoauth_displayname='Google API Latitude',
            location='current',
            granularity='city'
            )

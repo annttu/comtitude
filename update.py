@@ -112,7 +112,7 @@ def glocation(jdata):
         return retval
 
 
-def updateLocation(wlan=True, cell=True):
+def updateLocation(modem, wlan=True, cell=True):
     console = logging.getLogger("console")
     jdata = {
         "version": "1.1.0", 
@@ -128,10 +128,10 @@ def updateLocation(wlan=True, cell=True):
         count_wifi_towers = len(wifi_towers)
         jdata["wifi_towers"] = wifi_towers
     if cell is True:
-        mode = sources.get_operationmode()
+        mode = modem.get_operationmode()
         if mode is not None:
             jdata["radio_type"] = mode
-        cell_towers = sources.get_cellid()
+        cell_towers = modem.get_cellid()
         count_cell_towers = 0
         if cell_towers is not None:
             count_cell_towers = len(cell_towers)
@@ -145,11 +145,14 @@ def updateLocation(wlan=True, cell=True):
         loc = json.loads(loc)
         loc = glocation(jdata)
         if loc is not None:
-            retval = google.location2latitude(loc["latitude"], loc["longitude"], loc["accurancy"])
-            console.debug("latitude retval: %s" % retval)
-            loc["count_wifi_towers"] = count_wifi_towers;
-            loc["count_cell_towers"] = count_cell_towers;
-            return loc
+            try:
+                retval = google.location2latitude(loc["latitude"], loc["longitude"], loc["accurancy"])
+                console.debug("latitude retval: %s" % retval)
+                loc["count_wifi_towers"] = count_wifi_towers;
+                loc["count_cell_towers"] = count_cell_towers;
+                return loc
+            except apiclient.errors.HttpError as error:
+                console.error("latitude error: %s" % error)
     loc = opencellid(jdata)
     if loc is not None:
         if update:
@@ -190,6 +193,7 @@ def getLocationByAddress(address):
 
 def main(args):
     console = logging.getLogger("console")
+    modem = None
     cell = True
     wifi = True
     delay = 360
@@ -247,6 +251,8 @@ def main(args):
         if cell is False and wifi is False and location is None:
             console.error("Need either cellurar or wifi access")
             sys.exit(1)
+        if cell:
+            modem = sources.Modem()
         if once:
             if location is not None:
                 retval = google.location2latitude(location[0], location[1], 10)
@@ -256,7 +262,7 @@ def main(args):
             return
     try:
         while True:
-            formatOutput(updateLocation(wifi, cell))
+            formatOutput(updateLocation(modem, wifi, cell))
             sleep(delay)
     except KeyboardInterrupt:
         print("Bye!")
