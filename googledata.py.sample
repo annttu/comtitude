@@ -1,6 +1,6 @@
 # google customer secret and domain
 # https://www.google.com/accounts/ManageDomains
 
-consumer_key='domain.tld',
-consumer_secret='putsecrethere',
-domain='domain.tld',
+consumer_key='domain.tld'
+consumer_secret='putsecrethere'
+domain='domain.tld'
