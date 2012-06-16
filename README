@@ -16,10 +16,10 @@ Pyserial
 * easy_install -U pyserial
 urllib2
 json
-libxml2
 
-Before use you need to register a domain for oauth.
+pip install -r requirements.txt installs all required modules
 
-You can do it here: https://www.google.com/accounts/ManageDomains
+Before use you need to register an application on address
+https://code.google.com/apis/console/
 
-Put your domain and customer_secret to googledata.py file
+Put your client_id and client_secret to googledata.json file

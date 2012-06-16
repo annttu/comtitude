@@ -1,0 +1,5 @@
+google-api-python-client==1.0c1
+httplib2==0.7.4
+oauth2client==1.0c1
+urllib2
+json

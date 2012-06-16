@@ -6,28 +6,26 @@
 #http://maps.googleapis.com/maps/api/geocode/json?latlng=60.56245,24.9475585&sensor=false
 
 import sys
-from os import environ
+from os import environ, path
 import googledata
 
 home = environ["HOME"]
 
-sys.path.append("/opt/local/Library/Frameworks/Python.framework/Versions/2.6/lib/python2.6/site-packages/")
-sys.path.append("/opt/local/Library/Frameworks/Python.framework/Versions/2.6/lib/python2.6/site-packages/oauth2-1.5.211-py2.6.egg/")
-sys.path.append("/opt/local/Library/Frameworks/Python.framework/Versions/2.6/lib/python2.6/site-packages/python_gflags-2.0-py2.6.egg/")
-sys.path.append("/opt/local/Library/Frameworks/Python.framework/Versions/2.6/lib/python2.6/site-packages/google_api_python_client-1.0beta8-py2.6.egg") 
-
 import httplib2
 
 from apiclient.discovery import build
+from oauth2client.file import Storage
+from oauth2client.client import AccessTokenRefreshError
+from oauth2client.client import flow_from_clientsecrets
+from oauth2client.tools import run
 
-
-from apiclient.oauth import FlowThreeLegged
-from apiclient.ext.authtools import run
-from apiclient.ext.file import Storage
-from apiclient.errors import HttpError
 
 import json
 from tools import getPage
+
+CLIENT_SECRETS = path.join(path.dirname(__file__), 'googledata.json')
+MISSING_CLIENT_SECRETS_MESSAGE = """Please configure google credentials to %s file.""" % CLIENT_SECRETS
+
 
 def latlon2address(lat,lon):
     q = ",".join([str(lat),str(lon)])
@@ -60,19 +58,9 @@ def location2latitude(lat, lon, acc=130):
   storage = Storage(home + '/.latitude.dat')
   credentials = storage.get()
   if credentials is None or credentials.invalid == True:
-    auth_discovery = build("latitude", "v1").auth_discovery()
-    flow = FlowThreeLegged(auth_discovery,
-           # https://www.google.com/accounts/ManageDomains
-           consumer_key=googledata.consumer_key,
-           consumer_secret=googledata.consumer_secret,
-           domain=googledata.domain,
-           user_agent='Comtitude/1.0',
-           scope='https://www.googleapis.com/auth/latitude',
-           xoauth_displayname='Google API Latitude',
-           location='current',
-           granularity='city'
-           )
-
+    flow = flow_from_clientsecrets(CLIENT_SECRETS,
+           scope='https://www.googleapis.com/auth/latitude.all.best',
+           message=MISSING_CLIENT_SECRETS_MESSAGE)
     credentials = run(flow, storage)
 
   http = httplib2.Http()
@@ -85,7 +73,7 @@ def location2latitude(lat, lon, acc=130):
           "kind": "latitude#location",
           "latitude": lat,
           "longitude": lon,
-          accuracy": acc,
+          "accuracy": acc,
           "altitude": 0
           }
       }
