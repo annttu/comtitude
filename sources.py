@@ -12,12 +12,6 @@ error = re.compile("COMMAND NOT SUPPORT")
 
 class Modem():
 
-    class IOError():
-        log = logging.getLogger("console")
-        print("IOERROR")
-        log.error("Got ioerror while using modem")
-
-        pass
     def __init__(self, modem="/dev/cu.HUAWEIMobile-Pcui"):
         self.modem = modem
         self.console = logging.getLogger("console")
@@ -37,6 +31,13 @@ class Modem():
         while self.ser.inWaiting() > 10:
             self.ser.readline()
         return
+
+    def is_connected(self):
+        try:
+            self.ser.readline()
+            return True
+        except:
+            return False
 
     def get_operationmode(self):
         try:

@@ -267,9 +267,14 @@ def main(args):
             formatOutput(updateLocation(wifi, cell))
             return
     while True:
+        if modem.is_connected() is False:
+            console.info("Modem is not connected anymore")
+            modem = None
+
+        if cell and modem is None:
+            modem = sources.Modem()
         try:
             formatOutput(updateLocation(modem, wifi, cell))
-            sleep(delay)
         except KeyboardInterrupt:
             print("Bye!")
             break
@@ -279,7 +284,7 @@ def main(args):
             console.critical(traceback.format_exc(e))
         except:
             print("Unexepted unknown error occured")
-
+        sleep(delay)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
