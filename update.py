@@ -2,7 +2,6 @@
 # encoding: utf-8
 
 import json
-import sources
 import urllib, urllib2
 from time import sleep
 import re
@@ -26,6 +25,8 @@ latlon = re.compile('([0-9]{1,2}\.[0-9]{2,10}),([0-9]{1,2}\.[0-9]{2,10})')
 logging.basicConfig(format='%(asctime)-6s %(levelname)s: %(message)s')
 logger = logging.getLogger('console')
 logger.setLevel(logging.WARNING)
+
+import sources
 
 def usage():
         print("Usage: [-h, --help show help|-f --wifi wifi only|-m --modem usb modem only] [-o --once run once only] [-d --delay between updates] [-t --try don't update to latitude] [-v --verbose |--debug] [-c --coordinates 12.345656,32.123456 |-a --address Fabianinkatu 1, Helsinki, Finland]")
@@ -121,18 +122,19 @@ def updateLocation(modem, wlan=True, cell=True):
         "address_language": "fi_FI"
     }
     wifi_towers = None
+    cell_towers = None
     if wlan is True:
         wifi_towers = sources.get_wifi()
     count_wifi_towers = 0
+    count_cell_towers = 0
     if wifi_towers is not None:
         count_wifi_towers = len(wifi_towers)
         jdata["wifi_towers"] = wifi_towers
-    if cell is True:
+    if cell is True and modem is not None:
         mode = modem.get_operationmode()
         if mode is not None:
             jdata["radio_type"] = mode
         cell_towers = modem.get_cellid()
-        count_cell_towers = 0
         if cell_towers is not None:
             count_cell_towers = len(cell_towers)
             jdata["cell_towers"] = cell_towers
@@ -145,23 +147,27 @@ def updateLocation(modem, wlan=True, cell=True):
         loc = json.loads(loc)
         loc = glocation(jdata)
         if loc is not None:
-            try:
-                retval = google.location2latitude(loc["latitude"], loc["longitude"], loc["accurancy"])
-                console.debug("latitude retval: %s" % retval)
-                loc["count_wifi_towers"] = count_wifi_towers;
-                loc["count_cell_towers"] = count_cell_towers;
-                return loc
-            except apiclient.errors.HttpError as error:
-                console.error("latitude error: %s" % error)
-    loc = opencellid(jdata)
-    if loc is not None:
-        if update:
+            #try:
             retval = google.location2latitude(loc["latitude"], loc["longitude"], loc["accurancy"])
             console.debug("latitude retval: %s" % retval)
-        loc["count_wifi_towers"] = count_wifi_towers;
-        loc["count_cell_towers"] = count_cell_towers;
-        return loc
-    console.warning("Cannot get current location")
+            loc["count_wifi_towers"] = count_wifi_towers;
+            loc["count_cell_towers"] = count_cell_towers;
+            return loc
+            #except apiclient.errors.HttpError as error:
+            #    console.error("latitude error: %s" % error)
+        else:
+            console.debug("Can't fetch current location.")
+    else:
+        loc = opencellid(jdata)
+        if loc:
+            if update:
+                retval = google.location2latitude(loc["latitude"], loc["longitude"], loc["accurancy"])
+                console.debug("latitude retval: %s" % retval)
+            loc["count_wifi_towers"] = count_wifi_towers;
+            loc["count_cell_towers"] = count_cell_towers;
+            return loc
+        else:
+            console.warning("Cannot get current location")
     return
 
 def formatOutput(loc):
@@ -260,13 +266,20 @@ def main(args):
                 return
             formatOutput(updateLocation(wifi, cell))
             return
-    try:
-        while True:
+    while True:
+        try:
             formatOutput(updateLocation(modem, wifi, cell))
             sleep(delay)
-    except KeyboardInterrupt:
-        print("Bye!")
-        pass
+        except KeyboardInterrupt:
+            print("Bye!")
+            break
+        except Exception as e:
+            print("Unexepted Error occured")
+            import traceback
+            console.critical(traceback.format_exc(e))
+        except:
+            print("Unexepted unknown error occured")
+
 
 if __name__ == "__main__":
     main(sys.argv[1:])

@@ -12,6 +12,12 @@ error = re.compile("COMMAND NOT SUPPORT")
 
 class Modem():
 
+    class IOError():
+        log = logging.getLogger("console")
+        print("IOERROR")
+        log.error("Got ioerror while using modem")
+
+        pass
     def __init__(self, modem="/dev/cu.HUAWEIMobile-Pcui"):
         self.modem = modem
         self.console = logging.getLogger("console")
@@ -56,6 +62,8 @@ class Modem():
             return
         except serial.serialutil.SerialException:
             self.console.error("Error while using modem")
+            return
+        except IOError:
             return
 
     def get_cellid(self):
@@ -103,7 +111,7 @@ class Modem():
             retval["age"] = 0
             return [retval]
 
-        except OSError:
+        except OSError or IOError:
             self.console.error("Error while getting cell-id")
             return
         except serial.serialutil.SerialException:

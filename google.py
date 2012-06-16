@@ -19,9 +19,12 @@ sys.path.append("/opt/local/Library/Frameworks/Python.framework/Versions/2.6/lib
 import httplib2
 
 from apiclient.discovery import build
+
+
 from apiclient.oauth import FlowThreeLegged
 from apiclient.ext.authtools import run
 from apiclient.ext.file import Storage
+from apiclient.errors import HttpError
 
 import json
 from tools import getPage
@@ -82,8 +85,11 @@ def location2latitude(lat, lon, acc=130):
           "kind": "latitude#location",
           "latitude": lat,
           "longitude": lon,
-          "accuracy": acc,
+          accuracy": acc,
           "altitude": 0
           }
       }
-  return service.currentLocation().insert(body=body).execute()
+  try:
+      return service.currentLocation().insert(body=body).execute()
+  except HttpError:
+      return None
