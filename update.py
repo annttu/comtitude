@@ -267,7 +267,7 @@ def main(args):
             formatOutput(updateLocation(wifi, cell))
             return
     while True:
-        if modem.is_connected() is False:
+        if modem and modem.is_connected() is False:
             console.info("Modem is not connected anymore")
             modem = None
 
