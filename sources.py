@@ -5,7 +5,11 @@ import sys
 import subprocess
 import logging
 
+sys.path.append("/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/site-packages/")
+import gps
+
 sys.path.append("/opt/local/Library/Frameworks/Python.framework/Versions/2.6/lib/python2.6/site-packages/")
+
 import serial
 
 error = re.compile("COMMAND NOT SUPPORT")
@@ -163,3 +167,28 @@ def get_wifi():
     else:
         return
 
+def get_gps():
+    console = logging.getLogger('console')
+    console.debug('Getting location from gps')
+    session = None
+    try:
+        session = gps.gps()
+        session.stream(gps.WATCH_ENABLE|gps.WATCH_NEWSTYLE)
+        #if len(session.satellites) == 0:
+        #    log.debug('Gps has no satellites')
+        #    return
+        for i in range(0,5):
+            console.debug('Try %s' % i)
+            report = session.next()
+            if 'lat' in report:
+                console.debug('Got location from gps\n%s' % report)
+                session.close()
+                return {'latitude' : report['lat'], 'longitude' : report['lon'], 'accurancy' : report['alt'], 'provider' : 'gps'}
+    except StopIteration:
+        pass
+    except:
+        pass
+    console.debug('Gps not available')
+    if session:
+        session.close()
+    return

@@ -1,3 +1,4 @@
+#!/usr/vin/env python2.7
 # encoding: utf-8
 
 # some helperfunctions for googleapi
@@ -66,7 +67,10 @@ def location2latitude(lat, lon, acc=130):
   http = httplib2.Http()
   http = credentials.authorize(http)
 
-  service = build("latitude", "v1", http=http)
+  try:
+      service = build("latitude", "v1", http=http)
+  except httplib2.ServerNotFoundError:
+      return None
 
   body = {
       "data": {
@@ -80,4 +84,6 @@ def location2latitude(lat, lon, acc=130):
   try:
       return service.currentLocation().insert(body=body).execute()
   except HttpError:
+      return None
+  except httplib2.ServerNotFoundError:
       return None
